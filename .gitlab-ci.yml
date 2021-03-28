@@ -1,60 +1,71 @@
+# You can override the included template(s) by including variable overrides
+# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
 image: gradle:6.6-jdk8
-
 stages:
-  - lint
-  - test
-  - build
-  - deploy
-
+- lint
+- test
+- build
+- deploy
+- review
+- dast
+- staging
+- canary
+- production
+- incremental rollout 10%
+- incremental rollout 25%
+- incremental rollout 50%
+- incremental rollout 100%
+- performance
+- cleanup
 before_script:
-  - export GRADLE_USER_HOME=`pwd`/.gradle
-
+- export GRADLE_USER_HOME=`pwd`/.gradle
 cache:
   paths:
-    - .gradle/wrapper
-    - .gradle/caches
-
+  - ".gradle/wrapper"
+  - ".gradle/caches"
 test:
   stage: test
   script:
-    - gradle test
+  - gradle test
   artifacts:
     paths:
-      - build/reports/tests/test
-
+    - build/reports/tests/test
 lint:
   stage: lint
   script:
-    - gradle lintKotlin
-
+  - gradle lintKotlin
 build:
   stage: build
   script:
-    - gradle build
-    - gradle shadowJar
-    - gradle publish
+  - gradle build
+  - gradle shadowJar
+  - gradle publish
   artifacts:
     paths:
-      - build/libs/*.jar
-
+    - build/libs/*.jar
 docs:
   stage: build
   script:
-    - gradle dokka
+  - gradle dokka
   artifacts:
     paths:
-      - build/dokka
-
+    - build/dokka
 pages:
   stage: deploy
   script:
-    - mv _pages public
-    - mv build/dokka public/docs
-    - mv build/reports/tests/test public/tests
-    - mv build/libs/*.jar public/jars/
-    - echo "<html><body><h1>Directory listing:</h1>" > public/jars/index.html
-    - find public/jars/ -exec echo "<a href='{}'>{}</a><br/>" \; >> public/jars/index.html
-    - echo "</body></html>" >> public/jars/index.html
+  - mv _pages public
+  - mv build/dokka public/docs
+  - mv build/reports/tests/test public/tests
+  - mv build/libs/*.jar public/jars/
+  - echo "<html><body><h1>Directory listing:</h1>" > public/jars/index.html
+  - find public/jars/ -exec echo "<a href='{}'>{}</a><br/>" \; >> public/jars/index.html
+  - echo "</body></html>" >> public/jars/index.html
   artifacts:
     paths:
-      - public
+    - public
+sast:
+  stage: test
+include:
+- template: Auto-DevOps.gitlab-ci.yml
